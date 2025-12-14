@@ -1,0 +1,274 @@
+  <!DOCTYPE html>
+  <html lang="zh-CN">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <title>AI Translation Studio</title>
+      <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+          :root {
+              --primary: #007AFF; --success: #34C759; --danger: #FF3B30; --warning: #FF9500;
+              --bg-1: #F5F5F7; --bg-2: #FFFFFF; --text-1: #1D1D1F; --text-2: #86868B;
+              --border: #D2D2D7; --shadow: 0 4px 20px rgba(0,0,0,0.08);
+          }
+          [data-theme="dark"] {
+              --bg-1: #000000; --bg-2: #1C1C1E; --text-1: #FFFFFF; --text-2: #98989D; --border: #38383A;
+          }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', sans-serif; background: var(--bg-1); color: var(--text-1); line-height: 1.6; }
+          .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+          .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; }
+          .logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 600; }
+          .header-actions { display: flex; gap: 12px; align-items: center; }
+          .icon-btn { width: 40px; height: 40px; border: none; border-radius: 50%; background: var(--bg-2); color: var(--text-1); font-size: 20px; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.2s; }
+          .icon-btn:hover { transform: scale(1.1); }
+          .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+          .badge.success { background: rgba(52,199,89,0.1); color: var(--success); }
+          .badge.danger { background: rgba(255,59,48,0.1); color: var(--danger); }
+          .tabs { display: flex; gap: 8px; background: var(--bg-2); padding: 8px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); overflow-x: auto; }
+          .tab { flex: 1; min-width: 100px; padding: 12px 20px; border: none; border-radius: 8px; background: transparent; color: var(--text-2); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+          .tab.active { background: var(--primary); color: white; }
+          .tab-content { display: none; }
+          .tab-content.active { display: block; animation: fadeIn 0.3s; }
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          .card { background: var(--bg-2); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+          .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+          .form-group { display: flex; flex-direction: column; gap: 8px; }
+          label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+          input, select, textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); color: var(--text-1); font-size: 15px; font-family: inherit; transition: all 0.3s; }
+          input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
+          textarea { min-height: 200px; resize: vertical; line-height: 1.8; }
+          .btn-group { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+          .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+          .btn-primary { background: var(--primary); color: white; }
+          .btn-primary:active { background: #0051D5; transform: scale(0.95); }
+          .btn-secondary { background: var(--bg-2); color: var(--text-1); border: 1px solid var(--border); }
+          .btn-danger { background: var(--danger); color: white; }
+          .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+          .status { padding: 16px; border-radius: 10px; margin-top: 20px; display: none; }
+          .status.show { display: block; }
+          .status.success { background: rgba(52,199,89,0.1); color: var(--success); }
+          .status.error { background: rgba(255,59,48,0.1); color: var(--danger); }
+          .status.info { background: rgba(0,122,255,0.1); color: var(--primary); }
+          .status.warning { background: rgba(255,149,0,0.1); color: var(--warning); }
+          .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; }
+          .modal.show { display: flex; }
+          .modal-content { background: var(--bg-2); border-radius: 20px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+          .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+          .close-btn { width: 32px; height: 32px; border: none; border-radius: 50%; background: var(--bg-1); cursor: pointer; font-size: 20px; }
+          .voice-btn { width: 120px; height: 120px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 48px; cursor: pointer; display: block; margin: 20px auto; box-shadow: 0 8px 24px rgba(0,122,255,0.3); transition: all 0.3s; position: relative; z-index: 2; }
+          .voice-btn:active { transform: scale(0.95); }
+          .voice-btn.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+          @keyframes pulse { 0%, 100% { box-shadow: 0 8px 24px rgba(255,59,48,0.3); } 50% { box-shadow: 0 8px 40px rgba(255,59,48,0.6); } }
+          .audio-waves { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; pointer-events: none; z-index: 1; }
+          .wave { position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border: 4px solid rgba(255, 59, 48, 0.6); border-radius: 50%; opacity: 0; }
+          .wave.active { animation: ripple 2s ease-out infinite; }
+          .wave:nth-child(2) { animation-delay: 0.5s; }
+          .wave:nth-child(3) { animation-delay: 1s; }
+          @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
+          .volume-indicator { width: 80%; max-width: 250px; height: 12px; background: var(--bg-1); border-radius: 6px; margin: 20px auto; overflow: hidden; }
+          .volume-bar { height: 100%; background: linear-gradient(90deg, var(--success) 0%, var(--primary) 50%, var(--danger) 100%); width: 0%; transition: width 0.1s; }
+          .debug-panel { background: var(--bg-1); border-radius: 12px; padding: 16px; margin: 20px auto; max-width: 600px; font-family: monospace; font-size: 11px; max-height: 150px; overflow-y: auto; }
+          .debug-line { padding: 3px 0; color: var(--text-2); word-break: break-all; }
+          .debug-line.success { color: var(--success); }
+          .debug-line.error { color: var(--danger); }
+          .debug-line.warning { color: var(--warning); }
+          .debug-line.info { color: var(--primary); }
+          .lang-btn { padding: 10px 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-2); color: var(--text-1); cursor: pointer; margin: 5px; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+          .lang-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+          .lang-btn:active { transform: scale(0.95); }
+          .alert-box { background: rgba(255,149,0,0.1); border: 2px solid var(--warning); border-radius: 12px; padding: 20px; margin: 20px 0; }
+          .alert-box h3 { color: var(--warning); margin-bottom: 12px; font-size: 18px; }
+          .alert-box p { line-height: 1.8; margin-bottom: 8px; }
+          .alert-box ul { margin-left: 20px; margin-top: 12px; }
+          .alert-box li { margin: 8px 0; }
+          .expert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+          .expert-card { padding: 20px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+          .expert-card:active { transform: scale(0.98); }
+          .expert-card.active { border-color: var(--primary); background: rgba(0,122,255,0.05); }
+          .expert-icon { font-size: 32px; margin-bottom: 12px; }
+          .expert-name { font-weight: 600; margin-bottom: 8px; }
+          .expert-desc { font-size: 13px; color: var(--text-2); }
+          .expert-actions { display: flex; gap: 8px; margin-top: 12px; }
+          .expert-actions button { flex: 1; padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+          .model-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-1); border-radius: 8px; margin-bottom: 8px; }
+          .preview-image { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 12px; }
+          @media (max-width: 768px) {
+              .container { padding: 10px; }
+              .grid { grid-template-columns: 1fr; }
+              textarea { min-height: 150px; }
+              .voice-btn { width: 100px; height: 100px; font-size: 40px; }
+              .expert-grid { grid-template-columns: 1fr; }
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <div class="header">
+              <div class="logo"><span style="font-size: 28px;">🌐</span><span>AI Translation</span></div>
+              <div class="header-actions">
+                  <span id="statusBadge" class="badge danger">⚠️ 未配置</span>
+                  <button class="icon-btn" onclick="openSettings()">⚙️</button>
+                  <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+              </div>
+          </div>
+
+          <div class="tabs">
+              <button class="tab active" onclick="switchTab('text')">📝 文本</button>
+              <button class="tab" onclick="switchTab('voice')">🎤 语音</button>
+              <button class="tab" onclick="switchTab('file')">📄 文件</button>
+              <button class="tab" onclick="switchTab('history')">📚 历史</button>
+          </div>
+
+          <div id="text" class="tab-content active">
+              <div class="card">
+                  <div class="grid">
+                      <div class="form-group"><label>🎯 AI 专家</label><select id="expertSelect"></select></div>
+                      <div class="form-group"><label>🤖 AI 模型</label><select id="modelSelect"></select></div>
+                  </div>
+              </div>
+              <div class="card">
+                  <div class="form-group"><label>📝 原文 <span id="sourceCount">0 字</span></label><textarea id="sourceText" placeholder="输入要翻译的文本..."></textarea></div>
+                  <div class="form-group" style="margin-top: 16px;"><label>✨ 译文 <span id="targetCount">0 字</span></label><textarea id="targetText" placeholder="翻译结果..." readonly></textarea></div>
+                  <div class="btn-group" style="margin-top: 16px;">
+                      <button class="btn btn-primary" onclick="doTranslate()">🚀 翻译</button>
+                      <button class="btn btn-secondary" onclick="copyResult()">📋 复制</button>
+                      <button class="btn btn-secondary" onclick="clearText()">🗑️ 清空</button>
+                  </div>
+                  <div id="textStatus" class="status"></div>
+              </div>
+          </div>
+
+          <div id="voice" class="tab-content">
+              <div class="card">
+                  <div class="grid">
+                      <div class="form-group"><label>🎯 AI 专家</label><select id="voiceExpertSelect"></select></div>
+                      <div class="form-group"><label>🤖 AI 模型</label><select id="voiceModelSelect"></select></div>
+                  </div>
+              </div>
+              
+              <div id="permissionAlert" class="alert-box" style="display: none;">
+                  <h3>⚠️ 麦克风权限问题</h3>
+                  <p><strong>移动端浏览器需要特殊处理：</strong></p>
+                  <ul>
+                      <li>📱 <strong>Safari (iOS)</strong>: 设置 → Safari → 麦克风 → 允许</li>
+                      <li>🤖 <strong>Chrome (Android)</strong>: 点击地址栏左侧的锁图标 → 权限 → 麦克风 → 允许</li>
+                      <li>🔄 允许权限后，<strong>刷新页面</strong>重试</li>
+                      <li>💻 或在<strong>电脑浏览器</strong>中打开效果更好</li>
+                  </ul>
+                  <button class="btn btn-primary" onclick="retryPermission()" style="margin-top: 16px; width: 100%;">🔄 重新请求权限</button>
+              </div>
+              
+              <div class="card" style="text-align: center;">
+                  <h2 style="font-size: 20px;">🎤 实时同声传译</h2>
+                  <p style="color: var(--text-2); margin: 12px 0; font-size: 14px;">选择语言 → 点击麦克风 → 开始说话</p>
+                  <div style="margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center;">
+                      <button class="lang-btn" onclick="setLang('zh-CN')">🇨🇳 中文</button>
+                      <button class="lang-btn active" onclick="setLang('en-US')">🇺🇸 English</button>
+                      <button class="lang-btn" onclick="setLang('ja-JP')">🇯🇵 日本語</button>
+                      <button class="lang-btn" onclick="setLang('ko-KR')">🇰🇷 한국어</button>
+                  </div>
+                  <div style="position: relative; display: inline-block;">
+                      <div class="audio-waves" id="audioWaves"><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
+                      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+                  </div>
+                  <div class="volume-indicator"><div class="volume-bar" id="volumeBar"></div></div>
+                  <p id="voiceStatus" style="font-weight: 600; font-size: 15px; margin: 10px 0;">准备就绪</p>
+                  <div class="debug-panel" id="debugPanel"></div>
+                  <div style="margin-top: 20px;">
+                      <h3 style="font-size: 16px; margin-bottom: 8px;">🗣️ 识别文本</h3>
+                      <div id="recognizedText" style="padding: 16px; background: var(--bg-1); border-radius: 12px; min-height: 120px; text-align: left; white-space: pre-wrap; max-height: 300px; overflow-y: auto; font-size: 14px;">等待语音输入...</div>
+                  </div>
+                  <div style="margin-top: 16px;">
+                      <h3 style="font-size: 16px; margin-bottom: 8px;">✨ 翻译结果</h3>
+                      <div id="translatedVoice" style="padding: 16px; background: var(--bg-1); border-radius: 12px; min-height: 120px; text-align: left; white-space: pre-wrap; max-height: 300px; overflow-y: auto; font-size: 14px;">翻译结果...</div>
+                  </div>
+                  <div class="btn-group" style="margin-top: 20px;">
+                      <button class="btn btn-secondary" onclick="clearVoice()">🗑️ 清空</button>
+                      <button class="btn btn-secondary" onclick="speakTranslation()">🔊 朗读</button>
+                      <button class="btn btn-secondary" onclick="clearDebug()">🧹 清空日志</button>
+                  </div>
+              </div>
+          </div>
+
+          <div id="file" class="tab-content">
+              <div class="card">
+                  <div class="grid">
+                      <div class="form-group"><label>🎯 AI 专家</label><select id="fileExpertSelect"></select></div>
+                      <div class="form-group"><label>🤖 AI 模型</label><select id="fileModelSelect"></select></div>
+                  </div>
+              </div>
+              <div class="card">
+                  <input type="file" id="fileInput" accept=".txt,.md,.png,.jpg,.jpeg" style="margin-bottom: 16px;">
+                  <div id="imagePreview" style="display: none;"><img id="previewImg" class="preview-image" alt="预览"></div>
+                  <div class="btn-group"><button class="btn btn-primary" onclick="translateFile()">🚀 翻译文件</button></div>
+                  <div id="fileStatus" class="status"></div>
+                  <div id="fileResult" style="display: none; margin-top: 20px;">
+                      <h3>✨ 翻译结果：</h3>
+                      <div style="padding: 20px; background: var(--bg-1); border-radius: 12px; margin-top: 12px; white-space: pre-wrap; font-size: 14px;" id="fileResultText"></div>
+                      <div class="btn-group" style="margin-top: 16px;">
+                          <button class="btn btn-secondary" onclick="copyFileResult()">📋 复制</button>
+                          <button class="btn btn-secondary" onclick="downloadFileResult()">💾 下载</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <div id="history" class="tab-content">
+              <div class="card">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                      <h2>📚 翻译历史</h2>
+                      <button class="btn btn-danger" onclick="clearHistory()">🗑️ 清空</button>
+                  </div>
+                  <div id="historyList"></div>
+              </div>
+          </div>
+
+          <div class="card">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                  <h2>🎯 AI 专家</h2>
+                  <button class="btn btn-primary" onclick="openExpertModal()">➕ 添加</button>
+              </div>
+              <div class="expert-grid" id="expertGrid"></div>
+          </div>
+      </div>
+
+      <div id="settingsModal" class="modal">
+          <div class="modal-content">
+              <div class="modal-header"><h2>⚙️ 设置</h2><button class="close-btn" onclick="closeSettings()">✕</button></div>
+              <div class="form-group"><label>🔑 硅基流动 API Key</label><input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxx"></div>
+              <div class="btn-group">
+                  <button class="btn btn-primary" onclick="testAPI()">🔍 测试</button>
+                  <button class="btn btn-primary" onclick="saveSettings()">💾 保存</button>
+              </div>
+              <div id="testResult" class="status"></div>
+              <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border);">
+              <div class="form-group">
+                  <label>📦 模型管理</label>
+                  <div style="display: flex; gap: 8px;">
+                      <input type="text" id="newModelInput" placeholder="输入模型名称" style="flex: 1;">
+                      <button class="btn btn-primary" onclick="addModel()">➕</button>
+                  </div>
+                  <div id="modelList" style="margin-top: 16px;"></div>
+              </div>
+          </div>
+      </div>
+
+      <div id="expertModal" class="modal">
+          <div class="modal-content">
+              <div class="modal-header"><h2 id="expertModalTitle">➕ 添加专家</h2><button class="close-btn" onclick="closeExpertModal()">✕</button></div>
+              <div class="form-group"><label>图标</label><input type="text" id="expertIconInput" placeholder="🎯" maxlength="2"></div>
+              <div class="form-group"><label>名称</label><input type="text" id="expertNameInput" placeholder="专家名称"></div>
+              <div class="form-group"><label>描述</label><input type="text" id="expertDescInput" placeholder="简短描述"></div>
+              <div class="form-group"><label>System Prompt</label><textarea id="expertPromptInput" rows="8"></textarea></div>
+              <div class="btn-group">
+                  <button class="btn btn-primary" onclick="saveExpert()">💾 保存</button>
+                  <button class="btn btn-secondary" onclick="closeExpertModal()">取消</button>
+              </div>
+          </div>
+      </div>
+
+      <script>
+const APP={experts:[{id:"default",icon:"🌟",name:"通用翻译",desc:"地道自然",prompt:"你是翻译专家。将用户输入翻译成地道的中文。只输出译文。",isDefault:!0},{id:"academic",icon:"🎓",name:"学术翻译",desc:"专业准确",prompt:"你是学术翻译专家。翻译成专业的中文。只输出译文。",isDefault:!0}],models:["Qwen/Qwen2.5-7B-Instruct","Qwen/Qwen2.5-72B-Instruct","deepseek-ai/DeepSeek-V2.5"],history:[],currentExpert:"default",voiceExpert:"default",fileExpert:"default",editingExpert:null,currentFileResult:"",currentFileName:"",recognition:null,isRecording:!1,recognitionLang:"en-US",finalTranscript:"",interimTranscript:"",lastTranslateTime:0,audioContext:null,analyser:null,mediaStream:null,animationId:null,permissionDenied:!1};window.onload=function(){loadData();renderExperts();updateAllExpertSelects();updateModelSelects();checkStatus();renderHistory();renderModelList();const t=localStorage.getItem("theme")||"light";document.documentElement.setAttribute("data-theme",t);document.getElementById("sourceText").oninput=updateCount;document.getElementById("expertSelect").onchange=()=>{APP.currentExpert=document.getElementById("expertSelect").value;renderExperts()};document.getElementById("voiceExpertSelect").onchange=()=>{APP.voiceExpert=document.getElementById("voiceExpertSelect").value};document.getElementById("fileExpertSelect").onchange=()=>{APP.fileExpert=document.getElementById("fileExpertSelect").value};document.getElementById("fileInput").onchange=handleFileSelect;addDebug("🚀 应用已启动","success");checkBrowserSupport()};function checkBrowserSupport(){const t="webkitSpeechRecognition"in window||"SpeechRecognition"in window,e=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia,n=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);addDebug(`设备类型: ${n?"📱 移动端":"💻 桌面端"}`,"info");addDebug(`语音识别: ${t?"✅ 支持":"❌ 不支持"}`,t?"success":"error");addDebug(`麦克风API: ${e?"✅ 支持":"❌ 不支持"}`,e?"success":"error");if(n){addDebug("⚠️ 移动端可能需要手动授权麦克风权限","warning")}if(!t){alert("您的浏览器不支持语音识别\n\n请使用:\n• Chrome\n• Edge\n• Safari (iOS 14.5+)")}}function addDebug(t,e=""){const n=document.getElementById("debugPanel"),a=document.createElement("div");a.className="debug-line "+(e||"");a.textContent=`[${new Date().toLocaleTimeString()}] ${t}`;n.appendChild(a);if(n.children.length>20){n.removeChild(n.firstChild)}n.scrollTop=n.scrollHeight;console.log(`[${e}]`,t)}function clearDebug(){document.getElementById("debugPanel").innerHTML="";addDebug("日志已清空","info")}function setLang(t){APP.recognitionLang=t;document.querySelectorAll(".lang-btn").forEach(t=>t.classList.remove("active"));event.target.classList.add("active");addDebug(`切换语言: ${t}`,"success");if(APP.isRecording){addDebug("重启识别以应用新语言...","warning");stopVoice();setTimeout(startVoice,500)}}async function retryPermission(){addDebug("用户手动重试权限...","info");document.getElementById("permissionAlert").style.display="none";APP.permissionDenied=!1;startVoice()}async function startVoice(){if(!("webkitSpeechRecognition"in window||"SpeechRecognition"in window)){alert("浏览器不支持语音识别");return}if(APP.permissionDenied){addDebug("权限已被拒绝，请手动授权","error");document.getElementById("permissionAlert").style.display="block";return}try{addDebug("正在启动语音识别...","info");document.getElementById("voiceStatus").textContent="⏳ 启动中...";document.getElementById("voiceBtn").disabled=!0;addDebug("请求麦克风权限...","info");try{APP.mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!0,noiseSuppression:!0,autoGainControl:!0}});addDebug("✅ 麦克风权限已获取","success");document.getElementById("permissionAlert").style.display="none";APP.permissionDenied=!1}catch(t){addDebug(`❌ 麦克风权限失败: ${t.name}`,"error");document.getElementById("voiceBtn").disabled=!1;APP.permissionDenied=!0;document.getElementById("permissionAlert").style.display="block";if(t.name==="NotAllowedError"){addDebug("用户拒绝了麦克风权限","error")}else if(t.name==="NotFoundError"){addDebug("未检测到麦克风设备","error")}else{addDebug(`未知错误: ${t.message}`,"error")}return}addDebug("初始化音频可视化...","info");APP.audioContext=new(window.AudioContext||window.webkitAudioContext);APP.analyser=APP.audioContext.createAnalyser();APP.analyser.fftSize=2048;const t=APP.audioContext.createMediaStreamSource(APP.mediaStream);t.connect(APP.analyser);visualizeAudio();addDebug("✅ 音频可视化已启动","success");addDebug("创建语音识别实例...","info");const e=window.SpeechRecognition||window.webkitSpeechRecognition;APP.recognition=new e;APP.recognition.continuous=!0;APP.recognition.interimResults=!0;APP.recognition.lang=APP.recognitionLang;addDebug(`配置: lang=${APP.recognitionLang}`,"info");APP.recognition.onstart=()=>{APP.isRecording=!0;APP.finalTranscript="";document.getElementById("voiceBtn").classList.add("recording");document.getElementById("voiceBtn").disabled=!1;document.getElementById("voiceStatus").textContent="🎤 正在监听...";addDebug("✅ 开始监听，请说话","success")};APP.recognition.onresult=t=>{let e="",n="";for(let a=t.resultIndex;a<t.results.length;a++){const o=t.results[a][0].transcript;if(t.results[a].isFinal){e+=o+" "}else{n=o}}if(e){APP.finalTranscript+=e;addDebug(`识别: "${e.trim()}"`,"success");document.getElementById("recognizedText").textContent=APP.finalTranscript;const t=Date.now();if(t-APP.lastTranslateTime>1500){APP.lastTranslateTime=t;translateVoice(APP.finalTranscript.trim())}}if(n){document.getElementById("recognizedText").textContent=APP.finalTranscript+n}};APP.recognition.onerror=t=>{addDebug(`错误: ${t.error}`,"error");if(t.error==="not-allowed"){APP.permissionDenied=!0;document.getElementById("permissionAlert").style.display="block";stopVoice()}else if(t.error==="no-speech"){addDebug("未检测到语音","warning")}};APP.recognition.onspeechstart=()=>{addDebug("🗣️ 检测到语音","info")};APP.recognition.onend=()=>{addDebug("识别会话结束","info");if(APP.isRecording){setTimeout(()=>{if(APP.isRecording&&APP.recognition){try{APP.recognition.start();addDebug("✅ 已重启","success")}catch(t){addDebug(`重启失败: ${t.message}`,"error")}}},100)}};APP.recognition.start();addDebug("✅ 识别已启动","success")}catch(t){addDebug(`启动失败: ${t.message}`,"error");document.getElementById("voiceBtn").disabled=!1;alert(`启动失败:\n${t.message}`)}}function stopVoice(){addDebug("停止语音识别...","info");APP.isRecording=!1;if(APP.recognition){try{APP.recognition.stop()}catch(t){}APP.recognition=null}if(APP.mediaStream){APP.mediaStream.getTracks().forEach(t=>t.stop());APP.mediaStream=null}if(APP.animationId){cancelAnimationFrame(APP.animationId);APP.animationId=null}if(APP.audioContext){APP.audioContext.close();APP.audioContext=null}document.getElementById("voiceBtn").classList.remove("recording");document.getElementById("voiceBtn").disabled=!1;document.getElementById("voiceStatus").textContent="✅ 已停止";document.getElementById("audioWaves").querySelectorAll(".wave").forEach(t=>t.classList.remove("active"));document.getElementById("volumeBar").style.width="0%";addDebug("✅ 已停止","success")}function toggleVoice(){if(APP.isRecording){stopVoice()}else{const t=localStorage.getItem("apiKey");if(!t){alert("请先配置 API Key");openSettings();return}startVoice()}}function visualizeAudio(){if(!APP.isRecording||!APP.analyser)return;const t=new Uint8Array(APP.analyser.frequencyBinCount);APP.analyser.getByteFrequencyData(t);const e=t.reduce((t,e)=>t+e)/t.length,n=Math.min(100,e/128*100);document.getElementById("volumeBar").style.width=n+"%";if(n>2){document.getElementById("audioWaves").querySelectorAll(".wave").forEach(t=>t.classList.add("active"))}else{document.getElementById("audioWaves").querySelectorAll(".wave").forEach(t=>t.classList.remove("active"))}APP.animationId=requestAnimationFrame(visualizeAudio)}async function translateVoice(t){if(!t)return;const e=localStorage.getItem("apiKey");if(!e)return;const n=APP.experts.find(t=>t.id===APP.voiceExpert),a=document.getElementById("voiceModelSelect").value;addDebug(`翻译中...`,"info");try{const o=await fetch("https://api.siliconflow.cn/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+e},body:JSON.stringify({model:a,messages:[{role:"system",content:n.prompt},{role:"user",content:t}],temperature:.3,max_tokens:2e3})});if(o.ok){const t=await o.json();document.getElementById("translatedVoice").textContent=t.choices[0].message.content;addDebug("✅ 翻译完成","success")}else{addDebug(`翻译失败: ${o.status}`,"error")}}catch(t){addDebug(`翻译错误: ${t.message}`,"error")}}function clearVoice(){APP.finalTranscript="";document.getElementById("recognizedText").textContent="等待语音输入...";document.getElementById("translatedVoice").textContent="翻译结果...";addDebug("已清空","info")}function speakTranslation(){const t=document.getElementById("translatedVoice").textContent;if(t==="翻译结果..."){alert("没有可朗读的内容");return}if("speechSynthesis"in window){speechSynthesis.cancel();const e=new SpeechSynthesisUtterance(t);e.lang="zh-CN";e.rate=.9;speechSynthesis.speak(e)}}function loadData(){const t=localStorage.getItem("ai-translation-data");if(t){const e=JSON.parse(t);APP.experts=e.experts||APP.experts;APP.models=e.models||APP.models;APP.history=e.history||[]}}function saveData(){localStorage.setItem("ai-translation-data",JSON.stringify({experts:APP.experts,models:APP.models,history:APP.history}))}function checkStatus(){const t=localStorage.getItem("apiKey"),e=document.getElementById("statusBadge");if(t){e.className="badge success";e.textContent="✅ 已配置"}else{e.className="badge danger";e.textContent="⚠️ 未配置"}}function switchTab(t){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));event.target.classList.add("active");document.getElementById(t).classList.add("active");if(t!=="voice"&&APP.isRecording){stopVoice()}}async function doTranslate(){const t=localStorage.getItem("apiKey");if(!t){showStatus("textStatus","❌ 请先配置 API Key","error");openSettings();return}const e=document.getElementById("sourceText").value.trim();if(!e){showStatus("textStatus","❌ 请输入文本","error");return}const n=document.getElementById("modelSelect").value,a=APP.experts.find(t=>t.id===APP.currentExpert);showStatus("textStatus","翻译中...","info");try{const o=await fetch("https://api.siliconflow.cn/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({model:n,messages:[{role:"system",content:a.prompt},{role:"user",content:e}],temperature:.3,max_tokens:4e3})});if(!o.ok)throw new Error("API 错误");const i=await o.json();document.getElementById("targetText").value=i.choices[0].message.content;updateCount();showStatus("textStatus","✅ 翻译完成","success");APP.history.unshift({id:Date.now(),source:e,target:i.choices[0].message.content,expert:a.name,time:new Date().toLocaleString()});if(APP.history.length>50){APP.history=APP.history.slice(0,50)}saveData();renderHistory()}catch(t){showStatus("textStatus","❌ "+t.message,"error")}}function updateCount(){document.getElementById("sourceCount").textContent=document.getElementById("sourceText").value.length+" 字";document.getElementById("targetCount").textContent=document.getElementById("targetText").value.length+" 字"}function copyResult(){const t=document.getElementById("targetText").value;if(!t)return;navigator.clipboard.writeText(t).then(()=>{showStatus("textStatus","✅ 已复制","success")})}function clearText(){document.getElementById("sourceText").value="";document.getElementById("targetText").value="";updateCount()}function handleFileSelect(t){const e=t.target.files[0];if(!e)return;APP.currentFileName=e.name;if(e.type.startsWith("image/")){const t=new FileReader;t.onload=function(t){document.getElementById("previewImg").src=t.target.result;document.getElementById("imagePreview").style.display="block"};t.readAsDataURL(e)}else{document.getElementById("imagePreview").style.display="none"}}async function translateFile(){const t=localStorage.getItem("apiKey");if(!t){showStatus("fileStatus","❌ 请先配置 API Key","error");openSettings();return}const e=document.getElementById("fileInput");if(!e.files[0]){showStatus("fileStatus","❌ 请选择文件","error");return}const n=e.files[0],a=document.getElementById("fileModelSelect").value,o=APP.experts.find(t=>t.id===APP.fileExpert);showStatus("fileStatus","翻译中...","info");try{let e;if(n.type.startsWith("image/")){const t=await fileToBase64(n);e=[{role:"user",content:[{type:"text",text:"识别并翻译图片中的文字"},{type:"image_url",image_url:{url:t}}]}]}else{const t=await fileToText(n);e=[{role:"system",content:o.prompt},{role:"user",content:t}]}const i=await fetch("https://api.siliconflow.cn/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({model:a,messages:e,temperature:.3,max_tokens:4e3})});if(!i.ok)throw new Error("API 错误");const r=await i.json();APP.currentFileResult=r.choices[0].message.content;document.getElementById("fileResultText").textContent=APP.currentFileResult;document.getElementById("fileResult").style.display="block";showStatus("fileStatus","✅ 翻译完成","success")}catch(t){showStatus("fileStatus","❌ "+t.message,"error")}}function fileToBase64(t){return new Promise((e,n)=>{const a=new FileReader;a.onload=()=>e(a.result);a.onerror=n;a.readAsDataURL(t)})}function fileToText(t){return new Promise((e,n)=>{const a=new FileReader;a.onload=()=>e(a.result);a.onerror=n;a.readAsText(t,"UTF-8")})}function copyFileResult(){navigator.clipboard.writeText(APP.currentFileResult).then(()=>{showStatus("fileStatus","✅ 已复制","success")})}function downloadFileResult(){const t=new Blob([APP.currentFileResult],{type:"text/plain;charset=utf-8"}),e=URL.createObjectURL(t),n=document.createElement("a");n.href=e;n.download=APP.currentFileName.replace(/\.[^/.]+$/,"")+"_translated.txt";document.body.appendChild(n);n.click();document.body.removeChild(n);URL.revokeObjectURL(e)}function renderHistory(){const t=document.getElementById("historyList");if(APP.history.length===0){t.innerHTML='<div style="text-align: center; padding: 40px; color: var(--text-2);">暂无历史记录</div>';return}t.innerHTML=APP.history.map(t=>`<div class="card" style="background: var(--bg-1); cursor: pointer;" onclick="loadHistory(${t.id})"><div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><strong>${t.expert}</strong><span style="color: var(--text-2); font-size: 13px;">${t.time}</span></div><div style="color: var(--text-2); font-size: 14px;">${t.source.substring(0,80)}...</div></div>`).join("")}function loadHistory(t){const e=APP.history.find(e=>e.id===t);document.getElementById("sourceText").value=e.source;document.getElementById("targetText").value=e.target;updateCount();switchTab("text")}function clearHistory(){if(!confirm("确定清空？"))return;APP.history=[];saveData();renderHistory()}function renderExperts(){const t=document.getElementById("expertGrid");t.innerHTML="";APP.experts.forEach(e=>{const n=document.createElement("div");n.className="expert-card"+(e.id===APP.currentExpert?" active":"");n.onclick=()=>selectExpert(e.id);let a=`<div class="expert-icon">${e.icon}</div><div class="expert-name">${e.name}</div><div class="expert-desc">${e.desc}</div>`;if(!e.isDefault){a+=`<div class="expert-actions"><button style="background: var(--primary); color: white;" onclick="event.stopPropagation(); editExpert('${e.id}')">编辑</button><button style="background: var(--danger); color: white;" onclick="event.stopPropagation(); deleteExpert('${e.id}')">删除</button></div>`}n.innerHTML=a;t.appendChild(n)})}function updateAllExpertSelects(){const t=["expertSelect","voiceExpertSelect","fileExpertSelect"],e=[APP.currentExpert,APP.voiceExpert,APP.fileExpert];t.forEach((t,n)=>{const a=document.getElementById(t);a.innerHTML=APP.experts.map(t=>`<option value="${t.id}" ${t.id===e[n]?"selected":""}>${t.icon} ${t.name}</option>`).join("")})}function selectExpert(t){APP.currentExpert=t;renderExperts();document.getElementById("expertSelect").value=t}function openExpertModal(){APP.editingExpert=null;document.getElementById("expertModalTitle").textContent="➕ 添加专家";document.getElementById("expertIconInput").value="";document.getElementById("expertNameInput").value="";document.getElementById("expertDescInput").value="";document.getElementById("expertPromptInput").value="";document.getElementById("expertModal").classList.add("show")}function editExpert(t){const e=APP.experts.find(e=>e.id===t);APP.editingExpert=t;document.getElementById("expertModalTitle").textContent="✏️ 编辑专家";document.getElementById("expertIconInput").value=e.icon;document.getElementById("expertNameInput").value=e.name;document.getElementById("expertDescInput").value=e.desc;document.getElementById("expertPromptInput").value=e.prompt;document.getElementById("expertModal").classList.add("show")}function deleteExpert(t){if(!confirm("确定删除？"))return;APP.experts=APP.experts.filter(e=>e.id!==t);if(APP.currentExpert===t){APP.currentExpert="default"}saveData();renderExperts();updateAllExpertSelects()}function saveExpert(){const t=document.getElementById("expertIconInput").value.trim(),e=document.getElementById("expertNameInput").value.trim(),n=document.getElementById("expertDescInput").value.trim(),a=document.getElementById("expertPromptInput").value.trim();if(!t||!e||!n||!a){alert("请填写完整信息");return}if(APP.editingExpert){const o=APP.experts.findIndex(t=>t.id===APP.editingExpert);APP.experts[o]={...APP.experts[o],icon:t,name:e,desc:n,prompt:a}}else{APP.experts.push({id:"custom_"+Date.now(),icon:t,name:e,desc:n,prompt:a})}saveData();renderExperts();updateAllExpertSelects();closeExpertModal()}function closeExpertModal(){document.getElementById("expertModal").classList.remove("show")}function updateModelSelects(){const t=["modelSelect","voiceModelSelect","fileModelSelect"];t.forEach(t=>{const e=document.getElementById(t);e.innerHTML=APP.models.map(t=>`<option value="${t}">${t}</option>`).join("")})}function renderModelList(){const t=document.getElementById("modelList");t.innerHTML="";APP.models.forEach((e,n)=>{const a=document.createElement("div");a.className="model-list-item";const o=document.createElement("span");o.textContent=e;const i=document.createElement("button");i.className="btn btn-danger";i.style.cssText="padding: 4px 12px; font-size: 12px;";i.textContent="删除";i.onclick=()=>removeModel(n);a.appendChild(o);a.appendChild(i);t.appendChild(a)})}function addModel(){const t=document.getElementById("newModelInput"),e=t.value.trim();if(!e){alert("请输入模型名称");return}if(APP.models.includes(e)){alert("模型已存在");return}APP.models.push(e);saveData();updateModelSelects();renderModelList();t.value="";alert("✅ 模型已添加")}function removeModel(t){if(!confirm("确定删除？"))return;APP.models.splice(t,1);saveData();updateModelSelects();renderModelList()}function openSettings(){document.getElementById("apiKeyInput").value=localStorage.getItem("apiKey")||"";renderModelList();document.getElementById("settingsModal").classList.add("show")}function closeSettings(){document.getElementById("settingsModal").classList.remove("show")}function saveSettings(){const t=document.getElementById("apiKeyInput").value.trim();if(!t.startsWith("sk-")){alert("API Key 必须以 sk- 开头");return}localStorage.setItem("apiKey",t);checkStatus();showStatus("testResult","✅ 保存成功","success");setTimeout(closeSettings,1500)}async function testAPI(){const t=document.getElementById("apiKeyInput").value.trim();if(!t){showStatus("testResult","❌ 请输入 API Key","error");return}showStatus("testResult","🔄 测试中...","info");try{const e=await fetch("https://api.siliconflow.cn/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({model:"Qwen/Qwen2.5-7B-Instruct",messages:[{role:"user",content:"test"}],max_tokens:5})});if(e.ok){showStatus("testResult","✅ 连接成功！","success")}else{showStatus("testResult","❌ 连接失败","error")}}catch(t){showStatus("testResult","❌ 错误: "+t.message,"error")}}function toggleTheme(){const t=document.documentElement.getAttribute("data-theme"),e=t==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",e);localStorage.setItem("theme",e)}function showStatus(t,e,n){const a=document.getElementById(t);a.textContent=e;a.className="status "+n+" show";if(n==="success"){setTimeout(()=>a.classList.remove("show"),3e3)}}
+      </script>
+  </body>
+  </html>
